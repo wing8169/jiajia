@@ -37,61 +37,7 @@
           Jia Jia Soap Maker History
         </h5>
       </div>
-      <div class="row">
-        <div class="col s12 m6">
-          <div class="card medium">
-            <div class="card-image">
-              <img src="images/sample-1.jpg">
-              <span class="card-title black-text">家事皂</span>
-            </div>
-            <div class="card-content">
-              <p>Made on 2019-07-16</p>
-              <p>I am a very simple card. I am good at containing small bits of information.
-                I am convenient because I require little markup to use effectively.</p>
-            </div>
-            <div class="card-action center">
-              <button class="waves-effect waves-light btn-small pink lighten-2" type="button">
-                Load Soap History
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="col s12 m6">
-          <div class="card medium">
-            <div class="card-image">
-              <img src="images/sample-1.jpg">
-              <span class="card-title black-text">家事皂</span>
-            </div>
-            <div class="card-content">
-              <p>Made on 2019-07-16</p>
-              <p>I am a very simple card. I am good at containing small bits of information.
-                I am convenient because I require little markup to use effectively.</p>
-            </div>
-            <div class="card-action center">
-              <button class="waves-effect waves-light btn-small pink lighten-2" type="button">
-                Load Soap History
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="col s12 m6">
-          <div class="card medium">
-            <div class="card-image">
-              <img src="images/sample-1.jpg">
-              <span class="card-title black-text">家事皂</span>
-            </div>
-            <div class="card-content">
-              <p>Made on 2019-07-16</p>
-              <p>I am a very simple card. I am good at containing small bits of information.
-                I am convenient because I require little markup to use effectively.</p>
-            </div>
-            <div class="card-action center">
-              <button class="waves-effect waves-light btn-small pink lighten-2" type="button">
-                Load Soap History
-              </button>
-            </div>
-          </div>
-        </div>
+      <div class="row" id="cardContainer">
       </div>
     </div>
   </div>
@@ -142,6 +88,55 @@
     $(document).ready(function() {
       $('select').formSelect();
       $('.materialboxed').materialbox();
+      var history = [];
+      // get all history
+      $.ajax({
+        type: "POST",
+        url: "php/selectHistory.php",
+        data: {},
+        cache: false,
+        success: function(data) {
+          history = JSON.parse(data);
+          $.each(history, function(index, value) {
+            $("#cardContainer").append(
+              `<div class="col s12 m6" id="history${value["id"]}">
+                <div class="card medium">
+                  <div class="card-image">
+                    <img src="${value["imgPath"]}">
+                    <span class="card-title black-text">${value["name"]}</span>
+                  </div>
+                  <div class="card-content">
+                    <p>Made on ${value["timeMade"]}</p>
+                    <p>${value["description"]}</p>
+                  </div>
+                  <div class="card-action center">
+                    <button id="historyBtn${value["id"]}" class="waves-effect waves-light btn-small pink lighten-2" type="button">
+                      Load Soap History
+                    </button>
+                  </div>
+                </div>
+              </div>`
+            );
+            $(`#historyBtn${value["id"]}`).click(function() {
+              $.ajax({
+                type: "POST",
+                url: "php/setIdSession.php",
+                data: {
+                  id: value["id"],
+                },
+                cache: false,
+                success: function(data) {
+                  if (data == "success") {
+                    location.href = "soapMaker.php";
+                  } else {
+                    alert("Selected history is currently not available.");
+                  }
+                }
+              });
+            });
+          });
+        }
+      });
     });
   </script>
 </body>

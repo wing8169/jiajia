@@ -152,7 +152,7 @@
       </div>
       <!-- end panel for additive information -->
       <div class="row center" style="margin-top: 30px;">
-        <button id="printBtn" class="btn-large waves-effect waves-light pink lighten-2">Print Database</a>
+        <a href="php/printDatabase.php" target="_blank" id="printBtn" class="btn-large waves-effect waves-light pink lighten-2">Print Database</a>
       </div>
     </div>
   </div>

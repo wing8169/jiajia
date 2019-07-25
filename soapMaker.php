@@ -95,13 +95,13 @@ copy('images/sample-1.jpg', 'images/tmp.png');
           <div class="row">
             <div class="input-field col s12">
               <label for="oilAmount">Oil Amount (g)</label>
-              <input id="oilAmount" type="number" placeholder="Oil Amount (g)" class="validate" required />
+              <input id="oilAmount" type="text" placeholder="Oil Amount (g)" class="validate" required />
             </div>
           </div>
           <div class="row">
             <div class="input-field col s12">
               <label for="waterScale">Water Scale (against oil amount)</label>
-              <input id="waterScale" type="number" placeholder="Water Scale (against oil amount)" class="validate" required />
+              <input id="waterScale" type="text" placeholder="Water Scale (against oil amount)" class="validate" required />
             </div>
           </div>
           <div class="card-panel pink lighten-5">
@@ -113,7 +113,7 @@ copy('images/sample-1.jpg', 'images/tmp.png');
               </div>
               <div class="input-field col s12 m4">
                 <label for="oilPct">Oil Percentage</label>
-                <input id="oilPct" type="number" placeholder="Oil Percentage" class="validate" required />
+                <input id="oilPct" type="number" placeholder="Oil Percentage" class="validate" />
               </div>
               <div class="input-field col s12 m4">
                 <button id="oilBtn" type="button" class="waves-effect waves-light btn-small pink lighten-2">
@@ -132,38 +132,7 @@ copy('images/sample-1.jpg', 'images/tmp.png');
                   </tr>
                 </thead>
 
-                <tbody id="oilBody">
-                  <tr>
-                    <td>1</td>
-                    <td>棕榈油</td>
-                    <td>80</td>
-                    <td>
-                      <button class="waves-effect waves-light btn-small pink lighten-2" type="button">
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>2</td>
-                    <td>椰子油</td>
-                    <td>10</td>
-                    <td>
-                      <button class="waves-effect waves-light btn-small pink lighten-2" type="button">
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>3</td>
-                    <td>红椰子油</td>
-                    <td>10</td>
-                    <td>
-                      <button class="waves-effect waves-light btn-small pink lighten-2" type="button">
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
+                <tbody id="oilBody"></tbody>
               </table>
 
             </div>
@@ -179,7 +148,7 @@ copy('images/sample-1.jpg', 'images/tmp.png');
               </div>
               <div class="input-field col s12 m4">
                 <label for="additiveAmnt">Additive Amount (g / ml)</label>
-                <input id="additiveAmnt" type="number" placeholder="Additive Amount" class="validate" required />
+                <input id="additiveAmnt" type="number" placeholder="Additive Amount" class="validate" />
               </div>
               <div class="input-field col s12 m4">
                 <button id="additiveBtn" type="button" class="waves-effect waves-light btn-small pink lighten-2">
@@ -200,25 +169,12 @@ copy('images/sample-1.jpg', 'images/tmp.png');
                   </tr>
                 </thead>
 
-                <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td>棕榈添加物</td>
-                    <td>80.00 / 1000.0 g</td>
-                    <td>500.0</td>
-                    <td>7.00</td>
-                    <td>
-                      <button class="waves-effect waves-light btn-small pink lighten-2" type="button">
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
+                <tbody id="additivesBody"></tbody>
               </table>
             </div>
           </div>
           <div class="row center" style="margin-top: 30px;">
-            <button id="calculateBtn" class="btn-large waves-effect waves-light pink lighten-2">Calculate Cost</a>
+            <button id="calculateBtn" class="btn-large waves-effect waves-light pink lighten-2" type="button">Calculate Cost</button>
           </div>
         </form>
         <div class="row">
@@ -236,37 +192,7 @@ copy('images/sample-1.jpg', 'images/tmp.png');
               </tr>
             </thead>
 
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>棕榈油</td>
-                <td>80</td>
-                <td>
-                  <button class="waves-effect waves-light btn-small pink lighten-2" type="button">
-                    Remove
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>椰子油</td>
-                <td>10</td>
-                <td>
-                  <button class="waves-effect waves-light btn-small pink lighten-2" type="button">
-                    Remove
-                  </button>
-                </td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>红椰子油</td>
-                <td>10</td>
-                <td>
-                  <button class="waves-effect waves-light btn-small pink lighten-2" type="button">
-                    Remove
-                  </button>
-                </td>
-              </tr>
+            <tbody id="calculateBody">
             </tbody>
           </table>
 
@@ -321,12 +247,220 @@ copy('images/sample-1.jpg', 'images/tmp.png');
   <script src="js/materialize.js"></script>
   <script src="js/init.js"></script>
   <script>
+    var imgType = "jpg";
+    var selectedOil = [];
+    var selectedAdditives = [];
+    var allOil = [];
+    var allAdditives = [];
+    // for date usage
+    function appendLeadingZeroes(n) {
+      if (n <= 9) {
+        return "0" + n;
+      }
+      return n;
+    }
+    // calculate soap formula
+    function calculateSoap() {
+      //   // clean the table
+      $("#calculateBody").empty();
+      //   // try to draw the table
+      let ohTotal = 0,
+        insTotal = 0,
+        pctTotal = 0,
+        oilTotal = 0;
+      $.each(selectedOil, function(index, value) {
+        let currentOil = getOilBasedOnId(value["id"]);
+        let pct = parseFloat(value["pct"]);
+        let oilAmount = pct * $("#oilAmount").val() / 100.0;
+        let oh = 0;
+        let ins = 0;
+        if ($("#soapType").val() == 'solid') {
+          oh = currentOil["NaOH"];
+          ins = currentOil["INSsolid"];
+        } else {
+          oh = currentOil["KOH"];
+          ins = currentOil["INSliquid"];
+        }
+        let ohAmnt = oh * oilAmount;
+        let currentInsTotal = ins * pct / 100.0;
+        ohTotal += ohAmnt;
+        insTotal += currentInsTotal;
+        pctTotal += pct;
+        oilTotal += oilAmount;
+        $("#calculateBody").append(
+          `<tr>
+              <td>${index+1}</td>
+              <td>${currentOil["nameEng"]} ${currentOil["nameChi"]}</td>
+              <td>${parseFloat(pct).toFixed(2)}</td>
+              <td>${parseFloat(oilAmount).toFixed(2)}</td>
+              <td>${parseFloat(oh).toFixed(2)}</td>
+              <td>${parseFloat(ohAmnt).toFixed(2)}</td>
+              <td>${ins}</td>
+              <td>${parseFloat(currentInsTotal).toFixed(2)}</td>
+            </tr>`
+        );
+      });
+      $("#calculateBody").append(
+        `<tr>
+              <td></td>
+              <td></td>
+              <td>${parseFloat(pctTotal).toFixed(2)}</td>
+              <td>${parseFloat(oilTotal).toFixed(2)}</td>
+              <td></td>
+              <td>${Math.round(ohTotal)}</td>
+              <td></td>
+              <td>${Math.round(insTotal)}</td>
+            </tr>`
+      );
+      $("#calculateBody").append(
+        `<tr>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td>Water = </td>
+              <td>${Math.round(ohTotal * parseFloat($("#waterScale").val()))}</td>
+              <td></td>
+            </tr>`
+      );
+      let grandTotal = Math.round(ohTotal) + oilTotal + Math.round(ohTotal * parseFloat($("#waterScale").val()));
+      $("#calculateBody").append(
+        `<tr>
+              <td>Total Weight = ${Math.round(grandTotal)}</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>`
+      );
+      $("#calculateBody").append(
+        `<tr>
+              <td>Actual Weight = </td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>`
+      );
+    }
+    // get data of oil based on id
+    function getOilBasedOnId(id) {
+      let index = allOil.map(s => `${s["id"]}`).indexOf(`${id}`);
+      return allOil[index];
+    }
+    // get data of additives based on id
+    function getAdditiveBasedOnId(id) {
+      let index = allAdditives.map(s => `${s["id"]}`).indexOf(`${id}`);
+      return allAdditives[index];
+    }
+    // update oil table
+    function updateOilTable() {
+      // sort alphabetical order
+      selectedOil.sort(function(a, b) {
+        return a.last_nom == b.last_nom ? 0 : +(a.last_nom > b.last_nom) || -1;
+      });
+      $("#oilBody").empty();
+      $.each(selectedOil, function(index, value) {
+        let currentOil = getOilBasedOnId(value["id"]);
+        $("#oilBody").append(
+          `<tr>
+              <td>${index+1}</td>
+              <td>${currentOil["nameEng"]} ${currentOil["nameChi"]}</td>
+              <td>${value["pct"]}</td>
+              <td>
+                <button onclick="removeOil(${value["id"]})" class="waves-effect waves-light btn-small pink lighten-2" type="button">
+                  Remove
+                </button>
+              </td>
+            </tr>`
+        );
+      });
+    }
+    // update selector for oil
+    function updateOilSelector() {
+      let first = true;
+      $("#oilName").empty();
+      $.each(allOil, function(index, value) {
+        if (!selectedOil.map(d => `${d["id"]}`).includes(`${value["id"]}`)) {
+          if (first) {
+            $("#oilName").append(
+              `<option value="${value['id']}" selected>${value['nameEng']} ${value['nameChi']}</option>`
+            );
+            first = false;
+          } else {
+            $("#oilName").append(
+              `<option value="${value['id']}">${value['nameEng']} ${value['nameChi']}</option>`
+            );
+          }
+        }
+      });
+      $('select').formSelect();
+    }
+    // update additives table
+    function updateAdditivesTable() {
+      $("#additivesBody").empty();
+      $.each(selectedAdditives, function(index, value) {
+        let currentAdditive = getAdditiveBasedOnId(value["id"]);
+        $("#additivesBody").append(
+          `<tr>
+              <td>${index+1}</td>
+              <td>${currentAdditive["nameEng"]} ${currentAdditive["nameChi"]}</td>
+              <td>${currentAdditive["price"]} / ${currentAdditive["amount"]}</td>
+              <td>${value["amount"]}</td>
+              <td>${(currentAdditive["price"] / currentAdditive["amount"] * value["amount"]).toFixed(2)}</td>
+              <td>
+                <button onclick="removeAdditive(${value["id"]})" class="waves-effect waves-light btn-small pink lighten-2" type="button">
+                  Remove
+                </button>
+              </td>
+            </tr>`
+        );
+      })
+    }
+    // update selector for additives
+    function updateAdditivesSelector() {
+      let first = true;
+      $("#additiveName").empty();
+      $.each(allAdditives, function(index, value) {
+        if (!selectedAdditives.map(d => `${d["id"]}`).includes(`${value["id"]}`)) {
+          if (first) {
+            $("#additiveName").append(
+              `<option value="${value['id']}" selected>${value['nameEng']} ${value['nameChi']}</option>`
+            );
+            first = false;
+          } else {
+            $("#additiveName").append(
+              `<option value="${value['id']}">${value['nameEng']} ${value['nameChi']}</option>`
+            );
+          }
+        }
+      });
+      $('select').formSelect();
+    }
+    // remove oil based on ID
+    function removeOil(id) {
+      let index = selectedOil.map(s => `${s["id"]}`).indexOf(`${id}`);
+      selectedOil.splice(index, 1);
+      updateOilTable();
+      updateOilSelector();
+    };
+    // remove additive based on ID
+    function removeAdditive(id) {
+      let index = selectedAdditives.map(s => `${s["id"]}`).indexOf(`${id}`);
+      selectedAdditives.splice(index, 1);
+      updateAdditivesTable();
+      updateAdditivesSelector();
+    };
     $(document).ready(function() {
-      var imgType = "jpg";
-      var selectedOil = {};
-      var selectedAdditives = {};
       $('.materialboxed').materialbox();
-      // update oil selector
+      // update oil selector after getting data from database
       $.ajax({
         type: "POST",
         url: "php/selectOil.php",
@@ -334,20 +468,20 @@ copy('images/sample-1.jpg', 'images/tmp.png');
         cache: false,
         success: function(data) {
           data = JSON.parse(data);
-          let first = true;
-          $.each(data, function(index, value) {
-            if (first) {
-              $("#oilName").append(
-                `<option value="${value['id']}" selected>${value['nameEng']} ${value['nameChi']}</option>`
-              );
-              first = false;
-            } else {
-              $("#oilName").append(
-                `<option value="${value['id']}">${value['nameEng']} ${value['nameChi']}</option>`
-              );
-            }
-          });
-          $('select').formSelect();
+          allOil = data;
+          updateOilSelector();
+        }
+      });
+      // update additives selector after getting data from database
+      $.ajax({
+        type: "POST",
+        url: "php/selectAdditives.php",
+        data: {},
+        cache: false,
+        success: function(data) {
+          data = JSON.parse(data);
+          allAdditives = data;
+          updateAdditivesSelector();
         }
       });
       // upload image mechanism
@@ -382,19 +516,115 @@ copy('images/sample-1.jpg', 'images/tmp.png');
       });
       // add oil
       $("#oilBtn").click(function() {
-        $
-        // <tr>
-        //             <td>1</td>
-        //             <td>棕榈油</td>
-        //             <td>80</td>
-        //             <td>
-        //               <button class="waves-effect waves-light btn-small pink lighten-2" type="button">
-        //                 Remove
-        //               </button>
-        //             </td>
-        //           </tr>
-
+        selectedOil.push({
+          "id": $("#oilName").val(),
+          "pct": $("#oilPct").val(),
+        });
+        updateOilTable();
+        updateOilSelector();
       });
+      // add additive
+      $("#additiveBtn").click(function() {
+        selectedAdditives.push({
+          "id": $("#additiveName").val(),
+          "amount": $("#additiveAmnt").val()
+        });
+        updateAdditivesTable();
+        updateAdditivesSelector();
+      });
+      // calculate soap formula
+      $("#calculateBtn").click(function() {
+        calculateSoap();
+      });
+      // print soap and save history
+      $("#printBtn").click(function() {
+        // save history
+        let today = new Date();
+        $.ajax({
+          type: "POST",
+          url: "php/saveHistory.php",
+          data: {
+            "name": $("#name").val(),
+            "description": $("#desc").val(),
+            "mode": $("#soapType").val(),
+            "oilAmount": $("#oilAmount").val(),
+            "waterScale": $("#waterScale").val(),
+            "timeMade": today.getFullYear() + "-" + appendLeadingZeroes(today.getMonth() + 1) + "-" + appendLeadingZeroes(today.getDate()),
+            "imgPath": imgType,
+            "selectedOil": JSON.stringify(selectedOil),
+            "selectedAdditives": JSON.stringify(selectedAdditives),
+          },
+          cache: false,
+          success: function(data) {
+            console.log(data);
+          }
+        });
+        // print soap
+        let type = $("#soapType").val();
+        let data1 = [];
+        let data2 = [];
+        // get additives table values
+        let table = document.getElementById("additivesBody").children;
+        $.each(table, function(index, row) {
+          let tmp = [];
+          $.each(row.children, function(index, cell) {
+            tmp.push(cell.innerHTML);
+          });
+          data1.push(tmp);
+        });
+        // get result table values
+        let table2 = document.getElementById("calculateBody").children;
+        $.each(table2, function(index, row) {
+          let tmp2 = [];
+          $.each(row.children, function(index, cell) {
+            tmp2.push(cell.innerHTML);
+          });
+          data2.push(tmp2);
+        });
+        $.ajax({
+          type: "POST",
+          url: "php/setSession.php",
+          data: {
+            "type": type,
+            "data1": JSON.stringify(data1),
+            "data2": JSON.stringify(data2),
+          },
+          cache: false,
+          success: function(data) {
+            if (data == "success") {
+              window.open("php/printResult.php", "_blank");
+            }
+          }
+        });
+      });
+      // get history if applicable
+      setTimeout(function() {
+        $.ajax({
+          type: "POST",
+          url: "php/selectOneHistory.php",
+          data: {},
+          cache: false,
+          success: function(data) {
+            if (data != "none") {
+              data = JSON.parse(data);
+              imgType = data["imgPath"].substring(data["imgPath"].indexOf(".") + 1);
+              $("#image").attr("src", `images/tmp.${imgType}?rnd=${Math.random()}`);
+              $("#name").val(data["name"]);
+              $("#desc").val(data["description"]);
+              $("#soapType").val(data["mode"]);
+              $("#oilAmount").val(data["oilAmount"]);
+              $("#waterScale").val(data["waterScale"]);
+              selectedOil = data["selectedOil"];
+              selectedAdditives = data["selectedAdditives"];
+              calculateSoap();
+              updateOilTable();
+              updateOilSelector();
+              updateAdditivesTable();
+              updateAdditivesSelector();
+            }
+          }
+        });
+      }, 1000);
     });
   </script>
 </body>
